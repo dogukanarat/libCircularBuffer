@@ -5,7 +5,6 @@
 extern "C" {
 #endif
 
-#include <errno.h>
 #include <stdint.h>
 
 #ifndef NULL
@@ -19,6 +18,14 @@ extern "C" {
 #ifndef FALSE
 #define FALSE 0
 #endif
+
+#define LIBCB_SUCCESS           0
+#define LIBCB_INVALIDPARAM      -1
+#define LIBCB_BUFFERFULL        -2
+#define LIBCB_BUFFEREMPTY       -3
+#define LIBCB_BUFFEROVERFLOW    -4
+#define LIBCB_BUFFERUNDERFLOW   -5
+#define LIBCB_MUTEXERROR        -6
 
 /// @brief this struct defines the initialization parameters
 typedef struct 
@@ -44,26 +51,46 @@ typedef struct
 /// @param self pointer to the circular buffer
 /// @param init initialize parameter of the circular buffer
 /// @return 
-int16_t circularBufferInitialize(CircularBuffer *self, CircularBufferInit init);
+int32_t circularBufferInitialize(CircularBuffer *self, CircularBufferInit init);
 
-/// @brief this function resets/clear the circular buffer
+/// @brief this function removes all data from the circular buffer
 /// @param self pointer to the circular buffer
 /// @return 
-int16_t circularBufferClear(CircularBuffer *self);
+int32_t circularBufferFlush(CircularBuffer *self);
 
 /// @brief this function copy the data from the source to the circular buffer
 /// @param self 
 /// @param pSource 
 /// @param nSourceSize 
 /// @return 
-int16_t circularBufferPush(CircularBuffer *self, void *pSource, uint32_t nSourceSize);
+int32_t circularBufferPush(CircularBuffer *self, void *pSource, uint32_t nSourceSize);
 
 /// @brief this function copy the data from the circular buffer to the destination
 /// @param self 
 /// @param pDestination 
 /// @param nDestinationSize 
 /// @return 
-int16_t circularBufferPop(CircularBuffer *self, void *pDestination, uint32_t nDestinationSize);
+int32_t circularBufferPop(CircularBuffer *self, void *pDestination, uint32_t nDestinationSize);
+
+/// @brief this function checks if the circular buffer is empty
+/// @param self
+/// @return 
+int32_t circularBufferIsEmpty(CircularBuffer *self);
+
+/// @brief this function checks if the circular buffer is full
+/// @param self
+/// @return
+int32_t circularBufferIsFull(CircularBuffer *self);
+
+/// @brief this function returns the maximum number of bytes that can be stored in the circular buffer
+/// @param self
+/// @return
+int32_t circularBufferGetCapacity(CircularBuffer *self);
+
+/// @brief this function returns the number of bytes that are currently stored in the circular buffer
+/// @param self
+/// @return
+int32_t circularBufferGetCount(CircularBuffer *self);
 
 #ifdef __cplusplus
 }
