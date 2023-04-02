@@ -19,6 +19,7 @@ add_executable(
     UnitTest
     Main.cpp
     LibCircularBuffer.cpp
+    LibCircularBufferExt.cpp
 )
 
 target_compile_definitions(UnitTest PUBLIC CTEST)

@@ -303,3 +303,58 @@ int32_t circularBufferGetCount(CircularBuffer *self)
 
     return status;
 }
+
+int32_t circularBufferRead(
+    CircularBuffer *self,
+    void *pDestination,
+    uint32_t nDestinationSize,
+    uint32_t nStartOffset,
+    uint32_t nCount
+)
+{
+    int32_t status = LIBCB_SUCCESS;
+
+    for (;;)
+    {
+        if (self == NULL || pDestination == NULL || nDestinationSize == 0)
+        {
+            status = LIBCB_INVALIDPARAM;
+            break;
+        }
+
+        if (self->nCount == 0)
+        {
+            status = LIBCB_BUFFEREMPTY;
+            break;
+        }
+
+        if (nStartOffset + nCount > self->nCount)
+        {
+            status = LIBCB_BUFFERUNDERFLOW;
+            break;
+        }
+
+        Lock(self);
+
+        uint32_t nHead = self->nHead + nStartOffset;
+
+        if (nHead + nCount > self->init.nBufferSize)
+        {
+            uint32_t nFirstCopySize = self->init.nBufferSize - nHead;
+            uint32_t nSecondCopySize = nCount - nFirstCopySize;
+
+            memcpy(pDestination, (uint8_t *)self->init.pBuffer + nHead, nFirstCopySize);
+            memcpy((uint8_t *)pDestination + nFirstCopySize, self->init.pBuffer, nSecondCopySize);
+        }
+        else
+        {
+            memcpy(pDestination, (uint8_t *)self->init.pBuffer + nHead, nCount);
+        }
+
+        Release(self);
+
+        break;
+    }
+
+    return status;
+}
