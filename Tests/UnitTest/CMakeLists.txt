@@ -16,21 +16,21 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 add_executable(
-    UnitTest
+    LibCircularBufferUnitTest
     Main.cpp
     LibCircularBuffer.cpp
     LibCircularBufferExt.cpp
 )
 
-target_compile_definitions(UnitTest PUBLIC CTEST)
+target_compile_definitions(LibCircularBufferUnitTest PUBLIC CTEST)
 
 target_link_libraries(
-    UnitTest
-      gtest_main
-      CircularBuffer
+    LibCircularBufferUnitTest
+        gtest_main
+        CircularBuffer
 )
 
-gtest_discover_tests(UnitTest
+gtest_discover_tests(LibCircularBufferUnitTest
     PROPERTIES
         LABELS "unit"
     DISCOVERY_TIMEOUT  # how long to wait (in seconds) before crashing
