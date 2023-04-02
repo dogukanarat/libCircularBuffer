@@ -345,7 +345,7 @@ TEST(CircularBuffer, TestPopEmptyBuffer)
 
     status = circularBufferPop(&cb, dataToCompare, dataToPopSize);
 
-    EXPECT_EQ(status, LIBCB_BUFFERUNDERFLOW);
+    EXPECT_EQ(status, LIBCB_BUFFEREMPTY);
 
     EXPECT_EQ(cb.nCount, 0);
     EXPECT_EQ(cb.nHead, 0);
