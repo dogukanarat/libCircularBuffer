@@ -2,20 +2,20 @@
 #include "libCircularBuffer/CircularBuffer.h"
 
 // Lock the mutex
-static int16_t Lock(CircularBuffer *self);
+static int32_t Lock(CircularBuffer *self);
 
 // Release the mutex
-static int16_t Release(CircularBuffer *self);
+static int32_t Release(CircularBuffer *self);
 
-int16_t circularBufferInitialize(CircularBuffer *self, CircularBufferInit init)
+int32_t circularBufferInitialize(CircularBuffer *self, CircularBufferInit init)
 {
-    int16_t status = 0;
+    int32_t status = LIBCB_SUCCESS;
 
     for (;;)
     {
         if (self == NULL || init.nBufferSize == 0 || init.pBuffer == NULL)
         {
-            status = EINVAL;
+            status = LIBCB_INVALIDPARAM;
             break;
         }
 
@@ -36,15 +36,15 @@ int16_t circularBufferInitialize(CircularBuffer *self, CircularBufferInit init)
     return status;
 }
 
-int16_t circularBufferClear(CircularBuffer *self)
+int32_t circularBufferFlush(CircularBuffer *self)
 {
-    int16_t status = 0;
+    int32_t status = LIBCB_SUCCESS;
 
     for (;;)
     {
         if (self == NULL)
         {
-            status = EINVAL;
+            status = LIBCB_INVALIDPARAM;
             break;
         }
 
@@ -58,21 +58,25 @@ int16_t circularBufferClear(CircularBuffer *self)
     return status;
 }
 
-int16_t circularBufferPush(CircularBuffer *self, void *pSource, uint32_t nSourceSize)
+int32_t circularBufferPush(CircularBuffer *self, void *pSource, uint32_t nSourceSize)
 {
-    int16_t status = 0;
+    int32_t status = LIBCB_SUCCESS;
 
     for (;;)
     {
-        if (self == NULL || pSource == NULL || nSourceSize == 0)
+        if (
+            self == NULL || pSource == NULL ||
+            nSourceSize == 0 || self->init.pBuffer == NULL ||
+            self->init.nBufferSize == 0
+            )
         {
-            status = EINVAL;
+            status = LIBCB_INVALIDPARAM;
             break;
         }
 
         if (self->init.nBufferSize < nSourceSize)
         {
-            status = ENOMEM;
+            status = LIBCB_BUFFEROVERFLOW;
             break;
         }
 
@@ -81,7 +85,7 @@ int16_t circularBufferPush(CircularBuffer *self, void *pSource, uint32_t nSource
         if (self->init.nBufferSize < (self->nCount + nSourceSize))
         {
             Release(self);
-            status = ENOMEM;
+            status = LIBCB_BUFFEROVERFLOW;
             break;
         }
 
@@ -110,15 +114,21 @@ int16_t circularBufferPush(CircularBuffer *self, void *pSource, uint32_t nSource
     return status;
 }
 
-int16_t circularBufferPop(CircularBuffer *self, void *pDestination, uint32_t nDestinationSize)
+int32_t circularBufferPop(CircularBuffer *self, void *pDestination, uint32_t nDestinationSize)
 {
-    int16_t status = 0;
+    int32_t status = LIBCB_SUCCESS;
 
     for (;;)
     {
         if (self == NULL || pDestination == NULL || nDestinationSize == 0)
         {
-            status = EINVAL;
+            status = LIBCB_INVALIDPARAM;
+            break;
+        }
+
+        if (self->nCount == 0)
+        {
+            status = LIBCB_BUFFEREMPTY;
             break;
         }
 
@@ -127,7 +137,7 @@ int16_t circularBufferPop(CircularBuffer *self, void *pDestination, uint32_t nDe
         if (self->nCount < nDestinationSize)
         {
             Release(self);
-            status = ENOMEM;
+            status = LIBCB_BUFFERUNDERFLOW;
             break;
         }
 
@@ -156,15 +166,15 @@ int16_t circularBufferPop(CircularBuffer *self, void *pDestination, uint32_t nDe
     return status;
 }
 
-int16_t Lock(CircularBuffer *self)
+int32_t Lock(CircularBuffer *self)
 {
-    int16_t status = 0;
+    int32_t status = LIBCB_SUCCESS;
 
     for (;;)
     {
         if (self == NULL)
         {
-            status = EINVAL;
+            status = LIBCB_INVALIDPARAM;
             break;
         }
 
@@ -179,15 +189,15 @@ int16_t Lock(CircularBuffer *self)
     return status;
 }
 
-int16_t Release(CircularBuffer *self)
+int32_t Release(CircularBuffer *self)
 {
-    int16_t status = 0;
+    int32_t status = LIBCB_SUCCESS;
 
     for (;;)
     {
         if (self == NULL)
         {
-            status = EINVAL;
+            status = LIBCB_INVALIDPARAM;
             break;
         }
 
@@ -195,6 +205,98 @@ int16_t Release(CircularBuffer *self)
         {
             self->init.pfnMutexRelease(self->pMutex);
         }
+
+        break;
+    }
+
+    return status;
+}
+
+int32_t circularBufferIsEmpty(CircularBuffer *self)
+{
+    int32_t status = LIBCB_SUCCESS;
+
+    for (;;)
+    {
+        if (self == NULL)
+        {
+            status = LIBCB_INVALIDPARAM;
+            break;
+        }
+
+        if (self->nCount == 0)
+        {
+            status = TRUE;
+            break;
+        }
+
+        status = FALSE;
+
+        break;
+    }
+
+    return status;
+}
+
+int32_t circularBufferIsFull(CircularBuffer *self)
+{
+    int32_t status = LIBCB_SUCCESS;
+
+    for (;;)
+    {
+        if (self == NULL)
+        {
+            status = LIBCB_INVALIDPARAM;
+            break;
+        }
+
+        if (self->nCount == self->init.nBufferSize)
+        {
+            status = TRUE;
+            break;
+        }
+
+        status = FALSE;
+
+        break;
+    }
+
+    return status;
+}
+
+int32_t circularBufferGetCapacity(CircularBuffer *self)
+{
+    int32_t status = LIBCB_SUCCESS;
+
+    for (;;)
+    {
+        if (self == NULL)
+        {
+            status = LIBCB_INVALIDPARAM;
+            break;
+        }
+
+        status = self->init.nBufferSize;
+
+        break;
+    }
+
+    return status;
+}
+
+int32_t circularBufferGetCount(CircularBuffer *self)
+{
+    int32_t status = LIBCB_SUCCESS;
+
+    for (;;)
+    {
+        if (self == NULL)
+        {
+            status = LIBCB_INVALIDPARAM;
+            break;
+        }
+
+        status = self->nCount;
 
         break;
     }

@@ -6,7 +6,7 @@ project(
     LANGUAGES C CXX
 )
 
-option(ENABLE_TEST_COVERAGE "Enable test coverage" ON)
+option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
